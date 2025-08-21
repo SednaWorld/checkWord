@@ -1,8 +1,17 @@
-export default async function handler(request, response) {
-  const { word } = request.query;
+/**
+ * API Serverless para Netlify que verifica si una palabra existe.
+ */
+// 1. La firma de la función cambia a (event, context)
+export default async function handler(event, context) {
+  
+  // 2. Obtenemos 'word' de event.queryStringParameters
+  const word = event.queryStringParameters.word;
 
   if (!word || typeof word !== 'string') {
-    return response.status(400).json({ error: "Parámetro 'word' no encontrado o inválido." });
+    return {
+      statusCode: 400,
+      body: JSON.stringify({ error: "Parámetro 'word' no encontrado o inválido." })
+    };
   }
 
   const palabraLimpia = word.trim().toLowerCase();
@@ -10,17 +19,23 @@ export default async function handler(request, response) {
   try {
     const wiktionaryURL = `https://es.wiktionary.org/api/rest_v1/page/definition/${palabraLimpia}`;
     const apiResponse = await fetch(wiktionaryURL);
-
     const existe = apiResponse.ok;
-    
-    response.status(200).json({
-      palabra: palabraLimpia,
-      existe: existe,
-      fuente: "Wiktionary"
-    });
+
+    // 3. La respuesta se retorna como un objeto con statusCode y body
+    return {
+      statusCode: 200,
+      body: JSON.stringify({
+        palabra: palabraLimpia,
+        existe: existe,
+        fuente: "Wiktionary"
+      })
+    };
 
   } catch (error) {
     console.error(error);
-    response.status(500).json({ error: "Error interno al conectar con el servicio de diccionario." });
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ error: "Error interno al conectar con el servicio de diccionario." })
+    };
   }
 }
